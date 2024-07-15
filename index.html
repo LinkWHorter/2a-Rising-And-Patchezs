@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раскраска Рисунка</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: gray;
+            flex-direction: column;
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+            user-select: none;         /* Современные браузеры */
+            font-family: Verdana;
+            margin: 16px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 95%;
+        }
+        .colors {
+            display: flex;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 80%;
+            z-index: 2; /* Установлен z-index */
+        }
+        .color {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #ccc;
+        }
+        .drawing {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 25px);
+            grid-auto-rows: 25px;
+            border: 3px solid #2d2d2d;
+            border-radius: 8px;
+            gap: 0;
+            margin-bottom: 20px;
+            overflow: visible;
+            transition: transform 0.2s ease-in-out;
+        }
+        .cell {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+        }
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+        .controls {
+            width: 192px;
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .control-button {
+            padding: 5px 10px;
+            cursor: pointer;
+            border: 1px solid #000;
+            background-color: #ccc;
+            z-index: 2; /* Установлен z-index */
+        }
+        .input-field {
+            margin-bottom: 10px;
+            background-color: #454545;
+            color: whitesmoke;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1.5px solid darkgray;
+            width: 32px;
+            gap: 8px;
+            z-index: 2;
+        }
+        #inputField {
+            z-index: 2;
+            background-color: #454545;
+            color: whitesmoke;
+            padding: 4px;
+            border: 1.5px solid darkgray;
+            border-radius: 4px;
+            user-select: text;
+        }
+        #modeLabel {
+            margin-top: 10px;
+            font-size: 16px;
+            z-index: 2;
+            color: whitesmoke;
+            text-shadow: #454545;
+            font-weight: bold;
+        }
+        .zoom-controls {
+            display: flex;
+            justify-content: space-around;
+            width: 20%;
+            margin-bottom: 15px;
+            z-index: 2; /* Установлен z-index */
+        }
+        .control-button {
+            border-radius: 5px;
+            background-color: darkgray;
+            color: #151515;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="colors" id="colorPalette">
+        <!-- Цвета будут добавлены здесь -->
+    </div>
+    <div class="zoom-controls">
+        <div class="control-button" id="zoomInButton">+</div>
+        <div class="control-button" id="zoomOutButton">-</div>
+    </div>
+    <div class="drawing" id="drawing">
+        <!-- Ячейки рисунка будут добавлены здесь -->
+    </div>
+    <div class="controls">
+        <input type="number" id="nField" class="input-field" placeholder="n" min="0" value="0">
+        <input type="number" id="pField" class="input-field" placeholder="p" min="0" value="0">
+    </div>
+    <input type="text" id="inputField" placeholder="{n,p;_,_,_}" style="width: 220px;">
+    <div id="modeLabel">Режим Раскраски</div>
+    <div class="controls">
+        <div class="control-button" id="copyButton">С</div>
+        <div class="control-button" id="pasteButton">P</div>
+        <div class="control-button" id="toggleModeButton">E</div>
+    </div>
+</div>
+
+<script>
+    const colors = [
+        '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFFFFF',
+        '#FFA500', '#800080', '#008000', '#800000', '#808000', '#00FF7F', '#FFD700', '#D2691E',
+        '#A52A2A', '#5F9EA0', '#7FFF00', '#DC143C'
+    ];
+
+    let selectedColorIndex = null;
+    let drawingData = [];
+    let isDrawingMode = false;
+    let zoomLevel = 1;
+
+    function createColorPalette() {
+        const colorPalette = document.getElementById('colorPalette');
+        colors.forEach((color, index) => {
+            const colorDiv = document.createElement('div');
+            colorDiv.className = 'color';
+            colorDiv.style.backgroundColor = color;
+            colorDiv.dataset.colorIndex = index + 1;
+            colorDiv.textContent = index + 1;
+            colorDiv.addEventListener('click', () => {
+                selectedColorIndex = index + 1;
+                console.log(`Выбран цвет: ${color} с номером ${selectedColorIndex}`);
+            });
+            colorPalette.appendChild(colorDiv);
+        });
+    }
+
+    function createDrawing() {
+    const drawing = document.getElementById('drawing');
+    drawing.innerHTML = ''; // Очистка текущего рисунка
+    drawing.style.gridTemplateColumns = `repeat(${drawingData[0]?.length || 0}, 25px)`; // Установление количества столбцов
+    drawing.style.transform = `scale(${zoomLevel})`; // Применение масштаба
+    drawingData.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'cell';
+            cellDiv.dataset.row = rowIndex;
+            cellDiv.dataset.col = colIndex;
+            if (cell !== '_') {
+                cellDiv.textContent = cell;
+                if (isDrawingMode) {
+                    cellDiv.style.backgroundColor = colors[cell - 1];
+                    cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
+                } else {
+                    cellDiv.style.backgroundColor = 'transparent';
+                    cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
+                }
+                cellDiv.dataset.cellIndex = cell;
+            }
+            cellDiv.addEventListener('mousedown', () => {
+                if (isDrawingMode) {
+                    handleDrawing(cellDiv, rowIndex, colIndex);
+                }
+            });
+            cellDiv.addEventListener('mouseover', () => {
+                if (isDrawingMode && mouseDown) {
+                    handleDrawing(cellDiv, rowIndex, colIndex);
+                }
+            });
+            drawing.appendChild(cellDiv);
+        });
+    });
+
+    let mouseDown = false;
+
+    // Обработчики для начала и окончания рисования
+    drawing.addEventListener('mousedown', () => {
+        mouseDown = true;
+    });
+
+    drawing.addEventListener('mouseup', () => {
+        mouseDown = false;
+    });
+
+    function handleDrawing(cellDiv, rowIndex, colIndex) {
+        if (selectedColorIndex) {
+            cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
+            cellDiv.style.color = colors[selectedColorIndex - 1];
+            cellDiv.textContent = selectedColorIndex;
+            cellDiv.dataset.cellIndex = selectedColorIndex;
+            drawingData[rowIndex][colIndex] = selectedColorIndex;
+        }
+    }
+}
+
+
+    function toggleMode() {
+        isDrawingMode = !isDrawingMode;
+        const modeLabel = document.getElementById('modeLabel');
+        if (isDrawingMode) {
+            modeLabel.textContent = 'Режим Рисования';
+        } else {
+            modeLabel.textContent = 'Режим Раскраски';
+            updateInputField(); // Обновляем строку ввода при переходе в режим раскраски
+        }
+        createDrawing(); // Пересоздаем таблицу при смене режима
+    }
+
+    function updateDrawingDataFromInput(input) {
+        const pattern = /{(\d+),(\d+);([^}]*)}/;
+        const match = input.match(pattern);
+        if (match) {
+            const n = parseInt(match[2], 10);
+            const p = parseInt(match[1], 10);
+            const entries = match[3].split(',');
+            drawingData = new Array(n).fill(null).map(() => new Array(p).fill('_'));
+            entries.forEach((entry, index) => {
+                const rowIndex = Math.floor(index / p);
+                const colIndex = index % p;
+                if (entry !== '_') {
+                    drawingData[rowIndex][colIndex] = parseInt(entry, 10);
+                }
+            });
+            createDrawing();
+            
+            // Update nField and pField values
+            document.getElementById('nField').value = p;
+            document.getElementById('pField').value = n;
+        } else {
+            alert('Неправильный формат ввода. Используйте формат {n,p;_,_,_}');
+        }
+    }
+
+    function updateTableSize() {
+        const nField = document.getElementById('nField');
+        const pField = document.getElementById('pField');
+        const n = parseInt(pField.value, 10) || 0; // Поменяли местами n и p
+        const p = parseInt(nField.value, 10) || 0; // Поменяли местами n и p
+        drawingData = new Array(n).fill(null).map(() => new Array(p).fill('_'));
+        createDrawing();
+        updateInputField();
+    }
+
+    function updateInputField() {
+        const inputField = document.getElementById('inputField');
+        let inputString = `{${drawingData[0]?.length || 0},${drawingData.length};`;
+        drawingData.forEach(row => {
+            row.forEach(cell => {
+                if (cell === '_') {
+                    inputString += '_,';
+                } else {
+                    inputString += `${cell},`;
+                }
+            });
+        });
+        inputString = inputString.replace(/,$/, ''); // Удаляем лишнюю запятую в конце
+        inputString += '}';
+        inputField.value = inputString;
+    }
+
+    function handleZoom(zoomIn) {
+        if (zoomIn) {
+            zoomLevel += 0.1; // Увеличиваем масштаб
+        } else {
+            zoomLevel -= 0.1; // Уменьшаем масштаб
+        }
+        createDrawing(); // Пересоздаем таблицу после масштабирования
+    }
+
+    document.getElementById('zoomInButton').addEventListener('click', () => handleZoom(true));
+    document.getElementById('zoomOutButton').addEventListener('click', () => handleZoom(false));
+    document.getElementById('copyButton').addEventListener('click', () => {
+        const inputField = document.getElementById('inputField');
+        inputField.select();
+        document.execCommand('copy');
+    });
+
+    document.getElementById('pasteButton').addEventListener('click', () => {
+        const inputField = document.getElementById('inputField');
+        const input = prompt('Вставьте текст:');
+        if (input) {
+            inputField.value = input;
+            updateDrawingDataFromInput(input);
+        }
+    });
+
+    document.getElementById('toggleModeButton').addEventListener('click', toggleMode);
+
+    document.getElementById('inputField').addEventListener('blur', (event) => {
+        updateDrawingDataFromInput(event.target.value);
+    });
+
+    document.getElementById('nField').addEventListener('blur', updateTableSize);
+    document.getElementById('pField').addEventListener('blur', updateTableSize);
+
+    createColorPalette();
+    createDrawing();
+</script>
+
+</body>
+</html>
