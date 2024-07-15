@@ -65,7 +65,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             box-sizing: border-box;
@@ -184,28 +184,43 @@
     }
 
     function createDrawing() {
-    const drawing = document.getElementById('drawing');
-    drawing.innerHTML = ''; // Очистка текущего рисунка
-    drawing.style.gridTemplateColumns = `repeat(${drawingData[0]?.length || 0}, 25px)`; // Установление количества столбцов
-    drawing.style.transform = `scale(${zoomLevel})`; // Применение масштаба
-    drawingData.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-            const cellDiv = document.createElement('div');
-            cellDiv.className = 'cell';
-            cellDiv.dataset.row = rowIndex;
-            cellDiv.dataset.col = colIndex;
-            if (cell !== '_') {
-                cellDiv.textContent = cell;
-                if (isDrawingMode) {
-                    cellDiv.style.backgroundColor = colors[cell - 1];
-                    cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
-                } else {
-                    cellDiv.style.backgroundColor = 'transparent';
-                    cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
+        const drawing = document.getElementById('drawing');
+        drawing.innerHTML = ''; // Очистка текущего рисунка
+        drawing.style.gridTemplateColumns = `repeat(${drawingData[0]?.length || 0}, 25px)`; // Установление количества столбцов
+        drawing.style.transform = `scale(${zoomLevel})`; // Применение масштаба
+        drawingData.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'cell';
+                cellDiv.dataset.row = rowIndex;
+                cellDiv.dataset.col = colIndex;
+                if (cell !== '_') {
+                    cellDiv.textContent = cell;
+                    if (isDrawingMode) {
+                        cellDiv.style.backgroundColor = colors[cell - 1];
+                        cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
+                    } else {
+                        cellDiv.style.backgroundColor = 'transparent';
+                        cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
+                    }
+                    cellDiv.dataset.cellIndex = cell;
                 }
-                cellDiv.dataset.cellIndex = cell;
-            }
-            cellDiv.addEventListener('mousedown', () => {
+                cellDiv.addEventListener('click', () => {
+                    if (selectedColorIndex) {
+                        if (isDrawingMode) {
+                            cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
+                            cellDiv.style.color = colors[selectedColorIndex - 1];
+                            cellDiv.textContent = selectedColorIndex;
+                            cellDiv.dataset.cellIndex = selectedColorIndex;
+                            drawingData[rowIndex][colIndex] = selectedColorIndex;
+                        } else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
+                            cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
+                            cellDiv.textContent = ''; // Убираем номер после закраски
+                            drawingData[rowIndex][colIndex] = '_';
+                            updateInputField(); // Обновляем строку ввода после закраски
+                        }
+                    }
+                });cellDiv.addEventListener('mousedown', () => {
                 if (isDrawingMode) {
                     handleDrawing(cellDiv, rowIndex, colIndex);
                 }
@@ -239,8 +254,7 @@
             drawingData[rowIndex][colIndex] = selectedColorIndex;
         }
     }
-}
-
+    }
 
     function toggleMode() {
         isDrawingMode = !isDrawingMode;
