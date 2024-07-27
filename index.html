@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="lyco-logotypic.png" type="image/x-icon">
     <title>Раскраска Рисунка</title>
+    <!-- Подключение библиотеки html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
     <style>
         body, html {
             height: 100%;
@@ -44,6 +46,10 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            box-shadow:
+              0px 0px 8px #15151555,
+              0px 0px 8px #15151555,
+              0px 0px 8px #15151555;
             justify-content: center;
             font-size: 12px;
             text-shadow: 
@@ -54,6 +60,7 @@
             color: #ccc;
         }
         .drawing {
+            transition: all 0.3s;
             display: grid;
             grid-template-columns: repeat(auto-fill, 25px);
             grid-auto-rows: 25px;
@@ -78,6 +85,7 @@
             border: 1px solid #ccc;
         }
         .cell:hover {
+            opacity: 0.8325;
             background-color: #f0f0f0;
         }
         .controls {
@@ -117,21 +125,113 @@
             margin-top: 10px;
             font-size: 16px;
             z-index: 2;
+            text-shadow: 
+                -1px -1px 1px #151515,  
+                1px -1px 1px #151515,
+                -1px  1px 1px #151515,
+                1px  1px 1px #151515;
             color: whitesmoke;
             text-shadow: #454545;
             font-weight: bold;
         }
         .zoom-controls {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
+            gap: 16px;
             width: 20%;
             margin-bottom: 15px;
             z-index: 2; /* Установлен z-index */
         }
         .control-button {
+            width: 12px;
+            height: 21px;
             border-radius: 5px;
+            text-align: center;
             background-color: darkgray;
             color: #151515;
+        }
+        .current-colour, .used-colours, .colours-tagging {
+            margin: 0 auto;
+            text-align: center;
+            color: white;
+            padding-bottom: 12px;
+            text-shadow: 
+                -1px -1px 1px #151515,  
+                1px -1px 1px #151515,
+                -1px  1px 1px #151515,
+                1px  1px 1px #151515;
+            z-index: 2;
+            font-weight: bold;
+        }
+        .colours-tagging {
+            opacity: 0.35;
+            text-shadow: 
+                -1px -1px 1px #151515,  
+                1px -1px 1px #151515,
+                -1px  1px 1px #151515,
+                1px  1px 1px #151515;
+        }
+        .color-display {
+            box-shadow:
+                0px 0px 8px #15151555,
+                0px 0px 8px #15151555,
+                0px 0px 8px #15151555;
+            margin-top: -2.5px;
+            padding: 15.75px;
+            transition: background-color 1.17031s;
+            border: 3.5px solid #303030; /* Рамка блока */
+            border-radius: 4px;
+            background-color: transparent; /* Изначально прозрачный фон */
+            display: inline-block; /* Блок отображается на одной линии с другими элементами */
+        }
+        .used-numbers {
+            transition: all 0.315s;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 0 auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            gap: 10px;
+            z-index: 2;
+            width: 80%;
+        }
+        .used-number {
+            transition: all 0.15s;
+            width: 30px;
+            height: 30px;
+            gap: 10px;
+            box-shadow:
+                0px 0px 8px #15151555,
+                0px 0px 8px #15151555,
+                0px 0px 8px #15151555;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #ccc;
+            text-shadow: 
+                -1px -1px 1px #151515,  
+                1px -1px 1px #151515,
+                -1px  1px 1px #151515,
+                1px  1px 1px #151515;
+        }
+        #bottomPanel {
+            transition: all 0.3s;
+            padding-top: 10px;
+            margin: 0 auto;
+            justify-content: center;
+            width: 250px;
+        }
+        .disabled {
+            opacity: 0.7;
+            pointer-events: none; /* Отключает все взаимодействия с элементом */
+        }
+        .hidden {
+            opacity: 0;
         }
     </style>
 </head>
@@ -141,8 +241,10 @@
     <div class="colors" id="colorPalette">
         <!-- Цвета будут добавлены здесь -->
     </div>
+    <div class="current-colour">Выбранный цвет:</div>
     <div class="zoom-controls">
         <div class="control-button" id="zoomInButton">+</div>
+        <div id="colorDisplay" class="color-display"></div>
         <div class="control-button" id="zoomOutButton">-</div>
     </div>
     <div class="drawing" id="drawing">
@@ -157,22 +259,137 @@
     <div class="controls">
         <div class="control-button" id="copyButton">С</div>
         <div class="control-button" id="pasteButton">P</div>
+        <div class="control-button" id="downloadImage">S</div>
         <div class="control-button" id="toggleModeButton">E</div>
+    </div>
+    <div class="hidden" id="bottomPanel">
+        <div class="used-colours">Использованные цвета: </div>
+        <div class="used-numbers" id="usedNumbers">
+            <!-- Числа будут добавлены здесь -->
+        </div>
+        <div class="colours-tagging">(нажмите выбранным цветом, чтобы залить)</div>
     </div>
 </div>
 
 <script>
     const colors = [
-        '#FF0000', '#FF6347', '#FFA300', '#FFD700', '#FFFF00', '#7B3F00',
-        '#008000', '#00FF00', '#A2D89A', '#00FFFF', '#00BFFF', '#007FFF',
-        '#0000FF', '#4B0082', '#800080', '#FF1493', '#FF00FF', '#EE82EE',
+        '#FF0000', '#FF6347', '#FFA300', '#FFD700', '#FFFF00', '#A2D89A',
+        '#00FF00', '#008000', '#00FFFF', '#00BFFF', '#007FFF', '#0000FF', 
+        '#4B0082', '#800080', '#7B3F00', '#FF1493', '#FF00FF', '#EE82EE',
         '#FFC0CB', '#F5F5DC', '#9B9B8E', '#404040', '#202020'
     ];
+    const colorDisplay = document.getElementById('colorDisplay');
 
     let selectedColorIndex = null;
+    let currentColorIndex = null;
     let drawingData = [];
+    let mouseDown = false;
     let isDrawingMode = false;
     let zoomLevel = 1;
+    let isRightMouseDown = false;
+
+    // Функция для обновления всех ячеек с определенным цветом
+    function updateColorForAllCells(oldColorNumber, newColorIndex) {
+        drawingData.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+                const cellString = String(cell);
+                if (cellString === oldColorNumber || cellString === 'F' + oldColorNumber) {
+                    const fillValue = newColorIndex;
+                    //const filledValue = 'F' + newColorIndex;
+                    drawingData[rowIndex][colIndex] = fillValue;
+                    const cellDiv = document.querySelector(`[data-row="${rowIndex}"][data-col="${colIndex}"]`);
+                    if (cellDiv) {
+                        cellDiv.style.backgroundColor = colors[newColorIndex - 1];
+                        cellDiv.style.color = colors[newColorIndex - 1];
+                        cellDiv.textContent = fillValue;
+                    }
+                }
+            });
+        });
+        createUsedNumbers(); // Обновляем список использованных чисел
+        updateInputField(); // Обновляем строку ввода
+    }
+    
+    // Добавляем обработчик кликов для всех ячеек
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.addEventListener('click', handleCellClick);
+    });
+    document.getElementById('downloadImage').addEventListener('click', downloadTableImage);
+
+      
+
+    function downloadTableImage() {
+    const drawing = document.getElementById('drawing');
+    const cellas = document.querySelectorAll('.cell');
+
+    // Изменяем стили ячеек
+    cellas.forEach(cell => {
+        cell.style.border = '0';
+        cell.style.borderRadius = '0';
+    });
+
+    drawing.style.border = '0';
+    drawing.style.borderRadius = '0';
+    
+    // Используем html2canvas для создания изображения
+    html2canvas(drawing, {
+        scale: 15, // Увеличиваем разрешение в 15 раз
+        onrendered: function(canvas) {
+            canvas.toBlob(function(blob) {
+                // Создаем ссылку на Blob
+                const url = window.URL.createObjectURL(blob);
+
+                // Создаем ссылку для скачивания
+                const link = document.createElement('a');
+                link.download = 'rysunock.png';
+                link.href = url;
+
+                // Добавляем ссылку на страницу и эмулируем клик
+                document.body.appendChild(link);
+                link.click();
+
+                // Удаляем ссылку из DOM
+                document.body.removeChild(link);
+
+                // Освобождаем ресурсы Blob
+                window.URL.revokeObjectURL(url);
+
+                drawing.style.border = '3px solid #2d2d2d';
+                drawing.style.borderRadius = '8px';
+
+                cellas.forEach(cell => {
+                    cell.style.border = '1px solid #ccc';
+                    cell.style.borderRadius = '4px';
+                });
+            });
+        }
+    });
+}
+
+    // Обработчик клика по элементу .used-number
+    document.querySelectorAll('.used-number').forEach(element => {
+        element.addEventListener('click', () => {
+            if (currentColorIndex !== null) {
+                const oldColorIndex = parseInt(element.textContent, 10);
+                if (oldColorIndex !== currentColorIndex) {
+                    updateCellsWithColor(oldColorIndex, currentColorIndex);
+                }
+            }
+        });
+    });
+
+    // Функция для установки выбранного цвета
+    function setColorIndex(index) {
+        currentColorIndex = index;
+    }
+
+    // Пример функции для установки цвета при клике на кнопку выбора цвета
+    document.querySelectorAll('.color-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const colorIndex = parseInt(button.dataset.colorIndex, 10);
+            setColorIndex(colorIndex);
+        });
+    });
 
     function createColorPalette() {
         const colorPalette = document.getElementById('colorPalette');
@@ -184,9 +401,75 @@
             colorDiv.textContent = index + 1;
             colorDiv.addEventListener('click', () => {
                 selectedColorIndex = index + 1;
+                if (selectedColorIndex) {
+                    colorDisplay.style.backgroundColor = colors[selectedColorIndex - 1];
+                }
                 console.log(`Выбран цвет: ${color} с номером ${selectedColorIndex}`);
             });
             colorPalette.appendChild(colorDiv);
+        });
+    }
+
+    function clearCell(cellDiv, rowIndex, colIndex) {
+        cellDiv.style.backgroundColor = 'transparent';
+        cellDiv.style.color = '#000'; // Цвет текста по умолчанию
+        cellDiv.textContent = '';
+        cellDiv.dataset.cellIndex = '_';
+        drawingData[rowIndex][colIndex] = '_'; // Обновляем данные рисунка
+        createDrawing();
+        createUsedNumbers(); // Пересоздаем список использованных чисел
+    }
+
+    function handleCellClick(cellDiv, rowIndex, colIndex) {
+        if (selectedColorIndex) {
+            if (isDrawingMode) {
+                cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
+                cellDiv.style.color = colors[selectedColorIndex - 1];
+                cellDiv.textContent = selectedColorIndex;
+                cellDiv.dataset.cellIndex = selectedColorIndex;
+                drawingData[rowIndex][colIndex] = selectedColorIndex;
+                createUsedNumbers();
+            } else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
+                const fillValue = 'F' + selectedColorIndex;
+                cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
+                cellDiv.style.color = colors[selectedColorIndex - 1];
+                cellDiv.textContent = fillValue;
+                cellDiv.dataset.cellIndex = fillValue;
+                drawingData[rowIndex][colIndex] = fillValue;
+                updateInputField(); // Обновляем строку ввода после закраски
+                createUsedNumbers();
+            }
+             
+        }
+    }
+
+    function setupCellEventListeners(cellDiv, rowIndex, colIndex) {
+        cellDiv.addEventListener('click', () => handleCellClick(cellDiv, rowIndex, colIndex));
+
+        cellDiv.addEventListener('mousedown', (event) => {
+            if (isDrawingMode) {
+                handleDrawing(cellDiv, rowIndex, colIndex);
+            }
+        });
+
+        cellDiv.addEventListener('mouseover', (event) => {
+            if (isDrawingMode && mouseDown) {
+                handleDrawing(cellDiv, rowIndex, colIndex);
+            }
+        });
+
+        cellDiv.addEventListener('contextmenu', (event) => {
+            if (isDrawingMode) {
+                event.preventDefault(); // Предотвращаем контекстное меню браузера
+                isRightMouseDown = false;
+                clearCell(cellDiv, rowIndex, colIndex);
+            }
+        });
+
+        cellDiv.addEventListener('touchstart', (event) => {
+            if (isDrawingMode) {
+                handleDrawing(cellDiv, rowIndex, colIndex);
+            }
         });
     }
 
@@ -202,64 +485,139 @@
                 cellDiv.dataset.row = rowIndex;
                 cellDiv.dataset.col = colIndex;
                 if (cell !== '_') {
-                    cellDiv.textContent = cell;
                     if (isDrawingMode) {
-                        cellDiv.style.backgroundColor = colors[cell - 1];
-                        cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
+                        if (String(cell).startsWith('F')) {
+                            // Обработка ячейки с состоянием закрашенности
+                            const number = parseInt(cell.substring(1), 10);
+                            cellDiv.style.backgroundColor = colors[number - 1];
+                            cellDiv.style.color = colors[number - 1]; // Цвет текста для закрашенной ячейки
+                            cellDiv.textContent = number;
+                        }
+                        else {
+                            cellDiv.style.backgroundColor = colors[cell - 1];
+                            cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
+                            cellDiv.textContent = cell;
+                        }
                     } else {
-                        cellDiv.style.backgroundColor = 'transparent';
-                        cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
+                        if (String(cell).startsWith('F')) {
+                            // Обработка ячейки с состоянием закрашенности
+                            const number = parseInt(cell.substring(1), 10);
+                            cellDiv.style.backgroundColor = colors[number - 1];
+                            cellDiv.style.color = colors[number - 1]; // Цвет текста для закрашенной ячейки
+                            cellDiv.textContent = number;
+                        }
+                        else {
+                            cellDiv.style.backgroundColor = 'transparent';
+                            cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
+                        }
                     }
+                    cellDiv.textContent = cell;
                     cellDiv.dataset.cellIndex = cell;
                 }
-                cellDiv.addEventListener('click', () => {
-                    if (selectedColorIndex) {
+            cellDiv.addEventListener('click', () => {
+                    if (isRightMouseDown == false && selectedColorIndex) {
                         if (isDrawingMode) {
                             cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
                             cellDiv.style.color = colors[selectedColorIndex - 1];
                             cellDiv.textContent = selectedColorIndex;
                             cellDiv.dataset.cellIndex = selectedColorIndex;
                             drawingData[rowIndex][colIndex] = selectedColorIndex;
+                            createUsedNumbers();
                         } else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
+                            const fillValue = 'F' + selectedColorIndex;
                             cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-                            cellDiv.textContent = ''; // Убираем номер после закраски
-                            drawingData[rowIndex][colIndex] = '_';
+                            cellDiv.style.color = colors[selectedColorIndex - 1];
+                            cellDiv.textContent = fillValue;
+                            cellDiv.dataset.cellIndex = fillValue;
+                            drawingData[rowIndex][colIndex] = fillValue;
                             updateInputField(); // Обновляем строку ввода после закраски
+                            createUsedNumbers();
                         }
                     }
-                });cellDiv.addEventListener('mousedown', () => {
-                if (isDrawingMode) {
+                });
+
+            cellDiv.addEventListener('mousedown', (event) => {
+                if (isRightMouseDown == false && isDrawingMode) {
                     handleDrawing(cellDiv, rowIndex, colIndex);
                 }
             });
-            cellDiv.addEventListener('mouseover', () => {
-                if (isDrawingMode && mouseDown) {
+            cellDiv.addEventListener('mouseover', (event) => {
+                if (isRightMouseDown == false && isDrawingMode && mouseDown) {
                     handleDrawing(cellDiv, rowIndex, colIndex);
                 }
             });
+            setupCellEventListeners(cellDiv, rowIndex, colIndex); // Устанавливаем обработчики событий
             drawing.appendChild(cellDiv);
         });
+          
+        createUsedNumbers();
     });
 
-    let mouseDown = false;
-
     // Обработчики для начала и окончания рисования
-    drawing.addEventListener('mousedown', () => {
+    drawing.addEventListener('mousedown', (event) => {
         mouseDown = true;
     });
 
     drawing.addEventListener('mouseup', () => {
+        isRightMouseDown = false;
         mouseDown = false;
     });
 
     function handleDrawing(cellDiv, rowIndex, colIndex) {
-        if (selectedColorIndex) {
-            cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-            cellDiv.style.color = colors[selectedColorIndex - 1];
-            cellDiv.textContent = selectedColorIndex;
-            cellDiv.dataset.cellIndex = selectedColorIndex;
-            drawingData[rowIndex][colIndex] = selectedColorIndex;
+        if (isRightMouseDown == false) {
+            if (selectedColorIndex) {
+                cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
+                cellDiv.style.color = colors[selectedColorIndex - 1];
+                cellDiv.textContent = selectedColorIndex;
+                cellDiv.dataset.cellIndex = selectedColorIndex;
+                drawingData[rowIndex][colIndex] = selectedColorIndex;
+                createUsedNumbers();
+            }
         }
+    }
+    }
+
+    function createUsedNumbers() {
+        const usedNumbersContainer = document.getElementById('usedNumbers');
+        usedNumbersContainer.innerHTML = ''; // Очистка текущих чисел
+        const uniqueNumbers = new Set();
+        drawingData.forEach(row => {
+            row.forEach(cell => {
+                const cellString = String(cell); // Преобразование в строку
+                if (cellString !== '_') {
+                    if (cellString.startsWith('F')) {
+                        uniqueNumbers.add(cellString.substring(1));
+                    } else {
+                        uniqueNumbers.add(cellString);
+                    }
+                }
+            });
+        });
+
+        // Преобразование множества в массив и сортировка чисел
+        const sortedNumbers = Array.from(uniqueNumbers).sort((a, b) => a - b);
+        sortedNumbers.forEach(number => {
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'used-number';
+            numberDiv.textContent = number;
+            numberDiv.style.backgroundColor = colors[number - 1];
+            numberDiv.dataset.number = number; // Добавляем data-атрибут для хранения номера цвета
+            numberDiv.addEventListener('click', () => {
+                // Обработка клика на .used-number
+                if (selectedColorIndex) {
+                    updateColorForAllCells(number, selectedColorIndex);
+                }
+            });
+            usedNumbersContainer.appendChild(numberDiv);
+        });
+    }
+
+    function toggleBottomPanel(isDrawingMode) {
+    const bottomPanel = document.getElementById('bottomPanel');
+    if (isDrawingMode) {
+        bottomPanel.classList.remove('hidden');
+    } else {
+        bottomPanel.classList.add('hidden');
     }
     }
 
@@ -268,10 +626,13 @@
         const modeLabel = document.getElementById('modeLabel');
         if (isDrawingMode) {
             modeLabel.textContent = 'Режим Рисования';
+            createUsedNumbers();
         } else {
             modeLabel.textContent = 'Режим Раскраски';
             updateInputField(); // Обновляем строку ввода при переходе в режим раскраски
         }
+        updateButtonState(isDrawingMode);
+        toggleBottomPanel(isDrawingMode);
         createDrawing(); // Пересоздаем таблицу при смене режима
     }
 
@@ -287,10 +648,12 @@
                 const rowIndex = Math.floor(index / p);
                 const colIndex = index % p;
                 if (entry !== '_') {
-                    drawingData[rowIndex][colIndex] = parseInt(entry, 10);
+                    drawingData[rowIndex][colIndex] = entry;
                 }
             });
             createDrawing();
+              
+            createUsedNumbers();
             
             // Update nField and pField values
             document.getElementById('nField').value = p;
@@ -307,7 +670,9 @@
         const p = parseInt(nField.value, 10) || 0; // Поменяли местами n и p
         drawingData = new Array(n).fill(null).map(() => new Array(p).fill('_'));
         createDrawing();
+        createUsedNumbers();
         updateInputField();
+          
     }
 
     function updateInputField() {
@@ -333,7 +698,7 @@
         } else {
             zoomLevel -= 0.1; // Уменьшаем масштаб
         }
-        createDrawing(); // Пересоздаем таблицу после масштабирования
+        createDrawing();
     }
 
     document.getElementById('zoomInButton').addEventListener('click', () => handleZoom(true));
@@ -344,12 +709,16 @@
         document.execCommand('copy');
     });
 
-    document.getElementById('pasteButton').addEventListener('click', () => {
-        const inputField = document.getElementById('inputField');
-        const input = prompt('Вставьте текст:');
-        if (input) {
-            inputField.value = input;
-            updateDrawingDataFromInput(input);
+    document.getElementById('pasteButton').addEventListener('click', async () => {
+        try {
+            const clipboardText = await navigator.clipboard.readText();
+            if (clipboardText) {
+                const inputField = document.getElementById('inputField');
+                inputField.value = clipboardText;
+                updateDrawingDataFromInput(clipboardText);
+            }
+        } catch (err) {
+            console.error('Не удалось получить данные из буфера обмена: ', err);
         }
     });
 
