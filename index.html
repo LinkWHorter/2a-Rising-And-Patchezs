@@ -316,8 +316,6 @@
     });
     document.getElementById('downloadImage').addEventListener('click', downloadTableImage);
 
-      
-
     function downloadTableImage() {
     const drawing = document.getElementById('drawing');
     const cellas = document.querySelectorAll('.cell');
@@ -439,7 +437,6 @@
                 updateInputField(); // Обновляем строку ввода после закраски
                 createUsedNumbers();
             }
-             
         }
     }
 
@@ -549,7 +546,6 @@
             setupCellEventListeners(cellDiv, rowIndex, colIndex); // Устанавливаем обработчики событий
             drawing.appendChild(cellDiv);
         });
-          
         createUsedNumbers();
     });
 
@@ -631,7 +627,6 @@
             modeLabel.textContent = 'Режим Раскраски';
             updateInputField(); // Обновляем строку ввода при переходе в режим раскраски
         }
-        updateButtonState(isDrawingMode);
         toggleBottomPanel(isDrawingMode);
         createDrawing(); // Пересоздаем таблицу при смене режима
     }
@@ -652,7 +647,6 @@
                 }
             });
             createDrawing();
-              
             createUsedNumbers();
             
             // Update nField and pField values
@@ -672,7 +666,6 @@
         createDrawing();
         createUsedNumbers();
         updateInputField();
-          
     }
 
     function updateInputField() {
