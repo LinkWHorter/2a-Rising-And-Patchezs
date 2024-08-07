@@ -78,7 +78,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             box-sizing: border-box;
@@ -211,7 +211,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 10px;
             color: #ccc;
             text-shadow: 
                 -1px -1px 1px #151515,  
@@ -225,6 +225,34 @@
             margin: 0 auto;
             justify-content: center;
             width: 250px;
+        }
+        .popup {
+            display: none;
+            width: 165.6px;
+            position: absolute;
+            background-color: #18181899;
+            border: 1px solid #18181899;
+            border-radius: 14px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 10px;
+            justify-content: center;
+            z-index: 10;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .popup .shade {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            text-shadow: -1px -1px 1px #151515, 1px -1px 1px #151515, -1px 1px 1px #151515, 1px 1px 1px #151515;
+            color: #ccc;
         }
         .disabled {
             opacity: 0.7;
@@ -270,6 +298,7 @@
         <div class="colours-tagging">(нажмите выбранным цветом, чтобы залить)</div>
     </div>
 </div>
+<div class="popup" id="colorPopup"></div>
 
 <script>
     const colors = [
@@ -278,15 +307,89 @@
         '#4B0082', '#800080', '#7B3F00', '#FF1493', '#FF00FF', '#EE82EE',
         '#FFC0CB', '#F5F5DC', '#9B9B8E', '#404040', '#202020'
     ];
+    const shades = {
+        1: ['#FFCCCC', '#FF9999', '#FF6666', '#FF3333', '#FF0000', '#CC0000', '#990000'], // Shades for '#FF0000'
+        2: ['#FF9B8E', '#FF7F6D', '#FF5F4A', '#FF3F28', '#FF1A05', '#E60000', '#CC0000'], // Shades for '#FF6347'
+        3: ['#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00', '#EF6C00'], // Shades for '#FFA300'
+        4: ['#FFF8E1', '#FFE135', '#F7E300', '#F5C300', '#E6B800', '#D4A400', '#B89800'], // Shades for '#FFD700'
+        5: ['#FFFFE0', '#FFFFB3', '#FFFF80', '#FFFF4D', '#FFFF1A', '#E6E600', '#CCCC00'], // Shades for '#FFFF00'
+        6: ['#C4D6A2', '#A2C875', '#80BC4C', '#5DAA23', '#3B8C00', '#2E7D32', '#1B5E20'], // Shades for '#A2D89A'
+        7: ['#00FFCC', '#00E6B3', '#00CC99', '#00B380', '#00A366', '#008C8C', '#00796B'], // Shades for '#00FF00'
+        8: ['#004D00', '#006600', '#007A00', '#008800', '#009900', '#007A00', '#005600'], // Shades for '#008000'
+        9: ['#B3FFFF', '#99FFFF', '#80FFFF', '#66FFFF', '#00FFFF', '#00B3B3', '#009999'], // Shades for '#00FFFF'
+        10: ['#66D9FF', '#4DD0FF', '#33B5FF', '#1E88E5', '#1976D2', '#0D47A1', '#004D40'], // Shades for '#00BFFF'
+        11: ['#004D9F', '#0074D9', '#0099FF', '#00A4FF', '#00BFFF', '#1976D2', '#0D47A1'], // Shades for '#007FFF'
+        12: ['#8A2BE2', '#7A1C9B', '#6A0076', '#5C0063', '#4D0050', '#3D003C', '#2C002A'], // Shades for '#0000FF'
+        13: ['#8A2BE2', '#7A1C9B', '#6A0076', '#5C0063', '#4D0050', '#3D003C', '#2C002A'], // Shades for '#4B0082'
+        14: ['#D1A1D8', '#B86BCC', '#A75DBF', '#9A4DAE', '#8B1F8D', '#6D1F73', '#4B0044'], // Shades for '#800080'
+        15: ['#B68D00', '#A87300', '#9B6200', '#8B4D00', '#7B3900', '#6A2C00', '#5A1F00'], // Shades for '#7B3F00'
+        16: ['#FF6F8D', '#FF5070', '#FF388F', '#FF1D6F', '#FF004F', '#E6004F', '#CC0033'], // Shades for '#FF1493'
+        17: ['#FF66FF', '#FF4DFF', '#FF33FF', '#FF1AFF', '#FF00FF', '#E600E6', '#CC00CC'], // Shades for '#FF00FF'
+        18: ['#D0B3D9', '#C080C8', '#B24AB5', '#9E0092', '#D700FF', '#AA00AA', '#9B009B'], // Shades for '#EE82EE'
+        19: ['#F4B8C2', '#F0A0B2', '#E883A1', '#E56B8F', '#E02E6A', '#D81B60', '#C2185B'], // Shades for '#FFC0CB'
+        20: ['#F5F5E3', '#E8E8B5', '#DCD9A8', '#D0D086', '#B9B65D', '#A5A53F', '#8D8D1F'], // Shades for '#F5F5DC'
+        21: ['#D0D0C9', '#B7B7A9', '#9E9E8D', '#8F8F72', '#6B6B58', '#5A5A40', '#4C4C32'], // Shades for '#9B9B8E'
+        22: ['#595959', '#4D4D4D', '#404040', '#333333', '#1F1F1F', '#161616', '#0F0F0F'], // Shades for '#404040'
+        23: ['#2C2C2C', '#262626', '#1F1F1F', '#191919', '#141414', '#0D0D0D', '#060606']  // Shades for '#202020'
+    };
+
     const colorDisplay = document.getElementById('colorDisplay');
 
     let selectedColorIndex = null;
+    let selectedShadeIndex = null;
+    let cColor = null;
     let currentColorIndex = null;
     let drawingData = [];
     let mouseDown = false;
     let isDrawingMode = false;
     let zoomLevel = 1;
     let isRightMouseDown = false;
+    hideColorPopup();
+
+    function showColorPopup(x, y, colorIndex) {
+        const popup = document.getElementById('colorPopup');
+        popup.innerHTML = '';
+        const colorShades = shades[colorIndex] || [];
+
+        colorShades.forEach((shade, index) => {
+            const shadeDiv = document.createElement('div');
+            shadeDiv.className = 'shade';
+            shadeDiv.style.backgroundColor = shade;
+            index = index + 1;
+            const shadeKey = colorIndex + '་' + index; // Создаем ключ для shade
+            shadeDiv.dataset.shadeKey = shadeKey; // Устанавливаем ключ в dataset
+            shadeDiv.textContent = shadeKey;
+            shadeDiv.addEventListener('click', () => {
+                selectedColorIndex = colorIndex; // Обновляем выбранный цвет
+                selectedShadeIndex = shadeKey; // Обновляем выбранный оттенок
+                cColor = selectedShadeIndex;
+                console.log(`Выбран оттенок: ${selectedShadeIndex}`);
+
+                const shadeColor = shades[selectedColorIndex]?.[index]; // Получаем цвет по ключу
+                if (shadeColor) {
+                    colorDisplay.style.backgroundColor = shadeColor; // Обновляем цвет
+                } else {
+                    console.error(`Цвет для ключа ${selectedShadeIndex} не найден.`);
+                }
+                hideColorPopup(); // Скрываем всплывающее окно
+            });
+            popup.appendChild(shadeDiv);
+        });
+        popup.style.left = `${x}px`;
+        popup.style.top = `${y}px`;
+        popup.style.display = 'flex';
+    }
+
+    function hideColorPopup() {
+        const popup = document.getElementById('colorPopup');
+        popup.style.display = 'none';
+    }
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.shade') && !event.target.closest('.popup')) {
+            hideColorPopup();
+        }
+    });
 
     // Функция для обновления всех ячеек с определенным цветом
     function updateColorForAllCells(oldColorNumber, newColorIndex) {
@@ -299,9 +402,9 @@
                     drawingData[rowIndex][colIndex] = fillValue;
                     const cellDiv = document.querySelector(`[data-row="${rowIndex}"][data-col="${colIndex}"]`);
                     if (cellDiv) {
-                        cellDiv.style.backgroundColor = colors[newColorIndex - 1];
-                        cellDiv.style.color = colors[newColorIndex - 1];
-                        cellDiv.textContent = fillValue;
+                        cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                        cellDiv.style.color = colorDisplay.style.backgroundColor;
+                        cellDiv.textContent = cColor;
                     }
                 }
             });
@@ -353,7 +456,7 @@
                 window.URL.revokeObjectURL(url);
 
                 drawing.style.border = '3px solid #2d2d2d';
-                drawing.style.borderRadius = '8px';
+                drawing.style.borderRadius = '7px';
 
                 cellas.forEach(cell => {
                     cell.style.border = '1px solid #ccc';
@@ -399,10 +502,15 @@
             colorDiv.textContent = index + 1;
             colorDiv.addEventListener('click', () => {
                 selectedColorIndex = index + 1;
+                cColor = selectedColorIndex;
                 if (selectedColorIndex) {
                     colorDisplay.style.backgroundColor = colors[selectedColorIndex - 1];
                 }
                 console.log(`Выбран цвет: ${color} с номером ${selectedColorIndex}`);
+            });
+            colorDiv.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                showColorPopup(event.pageX, event.pageY, index + 1);
             });
             colorPalette.appendChild(colorDiv);
         });
@@ -419,18 +527,19 @@
     }
 
     function handleCellClick(cellDiv, rowIndex, colIndex) {
+        console.log(cColor);
         if (selectedColorIndex) {
             if (isDrawingMode) {
-                cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-                cellDiv.style.color = colors[selectedColorIndex - 1];
-                cellDiv.textContent = selectedColorIndex;
-                cellDiv.dataset.cellIndex = selectedColorIndex;
-                drawingData[rowIndex][colIndex] = selectedColorIndex;
+                cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                cellDiv.style.color = colorDisplay.style.backgroundColor;
+                cellDiv.textContent = cColor;
+                cellDiv.dataset.cellIndex = cColor;
+                drawingData[rowIndex][colIndex] = cColor;
                 createUsedNumbers();
             } else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
-                const fillValue = 'F' + selectedColorIndex;
-                cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-                cellDiv.style.color = colors[selectedColorIndex - 1];
+                const fillValue = 'F' + cColor;
+                cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                cellDiv.style.color = colorDisplay.style.backgroundColor;
                 cellDiv.textContent = fillValue;
                 cellDiv.dataset.cellIndex = fillValue;
                 drawingData[rowIndex][colIndex] = fillValue;
@@ -445,12 +554,6 @@
 
         cellDiv.addEventListener('mousedown', (event) => {
             if (isDrawingMode) {
-                handleDrawing(cellDiv, rowIndex, colIndex);
-            }
-        });
-
-        cellDiv.addEventListener('mouseover', (event) => {
-            if (isDrawingMode && mouseDown) {
                 handleDrawing(cellDiv, rowIndex, colIndex);
             }
         });
@@ -486,25 +589,61 @@
                         if (String(cell).startsWith('F')) {
                             // Обработка ячейки с состоянием закрашенности
                             const number = parseInt(cell.substring(1), 10);
-                            cellDiv.style.backgroundColor = colors[number - 1];
-                            cellDiv.style.color = colors[number - 1]; // Цвет текста для закрашенной ячейки
+                            if (!String(cell).includes('་')) {
+                                cellDiv.style.backgroundColor = colors[number - 1];
+                                cellDiv.style.fontSize = '10px';
+                                cellDiv.style.color = colors[number - 1];
+                            }
+                            else if (String(cell).includes('་')) {
+                                const cleanedCell = cell.startsWith('F') ? cell.slice(1) : cell;
+                                cellDiv.style.fontSize = '7px';
+                                const [shadeIndex, shadeNumber] = cleanedCell.split('་').map(Number);
+                                // Обработка ячейки с состоянием закрашенности
+                                cellDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
+                                cellDiv.style.color = shades[shadeIndex]?.[shadeNumber]; // Цвет текста для закрашенной ячейки
+                            }
                             cellDiv.textContent = number;
-                        }
-                        else {
-                            cellDiv.style.backgroundColor = colors[cell - 1];
-                            cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
-                            cellDiv.textContent = cell;
+                        } else {
+                            if (String(cell).includes('་')) {
+                                const [shadeIndex, shadeNumber] = cell.split('་').map(Number);
+                                cellDiv.style.fontSize = '7px';
+                                // Обработка ячейки с состоянием закрашенности
+                                cellDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
+                                cellDiv.style.color = shades[shadeIndex]?.[shadeNumber]; // Цвет текста для закрашенной ячейки
+                            }
+                            else if (!String(cell).includes('་')) {
+                                cellDiv.style.backgroundColor = colors[cell - 1];
+                                cellDiv.style.fontSize = '10px';
+                                cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
+                                cellDiv.textContent = cell;
+                            }
                         }
                     } else {
                         if (String(cell).startsWith('F')) {
                             // Обработка ячейки с состоянием закрашенности
                             const number = parseInt(cell.substring(1), 10);
-                            cellDiv.style.backgroundColor = colors[number - 1];
-                            cellDiv.style.color = colors[number - 1]; // Цвет текста для закрашенной ячейки
+                            if (!String(cell).includes('་')) {
+                                cellDiv.style.backgroundColor = colors[number - 1];
+                                cellDiv.style.fontSize = '12px';
+                                cellDiv.style.color = colors[number - 1];
+                            }
+                            else if (String(cell).includes('་')) {
+                                const cleanedCell = cell.startsWith('F') ? cell.slice(1) : cell;
+                                cellDiv.style.fontSize = '7px';
+                                const [shadeIndex, shadeNumber] = cleanedCell.split('་').map(Number);
+                                // Обработка ячейки с состоянием закрашенности
+                                cellDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
+                                cellDiv.style.color = shades[shadeIndex]?.[shadeNumber]; // Цвет текста для закрашенной ячейки
+                            }
                             cellDiv.textContent = number;
-                        }
-                        else {
+                        } else if (!String(cell).startsWith('F')) {
                             cellDiv.style.backgroundColor = 'transparent';
+                            if (!String(cell).includes('་')) {
+                                cellDiv.style.fontSize = '12px';
+                            }
+                            else if (String(cell).includes('་')) {
+                                cellDiv.style.fontSize = '10px';
+                            }
                             cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
                         }
                     }
@@ -514,16 +653,17 @@
             cellDiv.addEventListener('click', () => {
                     if (isRightMouseDown == false && selectedColorIndex) {
                         if (isDrawingMode) {
-                            cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-                            cellDiv.style.color = colors[selectedColorIndex - 1];
-                            cellDiv.textContent = selectedColorIndex;
-                            cellDiv.dataset.cellIndex = selectedColorIndex;
-                            drawingData[rowIndex][colIndex] = selectedColorIndex;
+                            cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                            cellDiv.style.color = colorDisplay.style.backgroundColor;
+                            cellDiv.textContent = cColor;
+                            cellDiv.dataset.cellIndex = cColor;
+                            drawingData[rowIndex][colIndex] = cColor;
                             createUsedNumbers();
-                        } else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
-                            const fillValue = 'F' + selectedColorIndex;
-                            cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-                            cellDiv.style.color = colors[selectedColorIndex - 1];
+                        } else if (cellDiv.dataset.cellIndex == cColor) {
+                            const fillValue = 'F' + cColor;
+                            cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                            cellDiv.style.color = colorDisplay.style.backgroundColor;
+                            cellDiv.style.fontSize = '7px';
                             cellDiv.textContent = fillValue;
                             cellDiv.dataset.cellIndex = fillValue;
                             drawingData[rowIndex][colIndex] = fillValue;
@@ -562,11 +702,11 @@
     function handleDrawing(cellDiv, rowIndex, colIndex) {
         if (isRightMouseDown == false) {
             if (selectedColorIndex) {
-                cellDiv.style.backgroundColor = colors[selectedColorIndex - 1];
-                cellDiv.style.color = colors[selectedColorIndex - 1];
-                cellDiv.textContent = selectedColorIndex;
-                cellDiv.dataset.cellIndex = selectedColorIndex;
-                drawingData[rowIndex][colIndex] = selectedColorIndex;
+                cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                cellDiv.style.color = colorDisplay.style.backgroundColor;
+                cellDiv.textContent = cColor;
+                cellDiv.dataset.cellIndex = cColor;
+                drawingData[rowIndex][colIndex] = cColor;
                 createUsedNumbers();
             }
         }
@@ -583,7 +723,7 @@
                 if (cellString !== '_') {
                     if (cellString.startsWith('F')) {
                         uniqueNumbers.add(cellString.substring(1));
-                    } else {
+                    } else if (!cellString.startsWith('F')) {
                         uniqueNumbers.add(cellString);
                     }
                 }
@@ -596,12 +736,25 @@
             const numberDiv = document.createElement('div');
             numberDiv.className = 'used-number';
             numberDiv.textContent = number;
-            numberDiv.style.backgroundColor = colors[number - 1];
+            // Найти ячейку .cell с контентом, равным color
+            const matchingCell = Array.from(document.querySelectorAll('.cell')).find(cell => numberDiv.textContent.trim() === cell.textContent.trim());
+
+            if (matchingCell) {
+                numberDiv.style.backgroundColor = matchingCell.style.backgroundColor;
+            } else {
+                // Определяем, является ли номер цветом или оттенком
+                if (number.toString().includes('་')) {
+                    const [shadeIndex, shadeNumber] = number.split('་').map(Number);
+                    numberDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
+                } else {
+                    numberDiv.style.backgroundColor = colors[number - 1];
+                }
+            }
             numberDiv.dataset.number = number; // Добавляем data-атрибут для хранения номера цвета
             numberDiv.addEventListener('click', () => {
                 // Обработка клика на .used-number
                 if (selectedColorIndex) {
-                    updateColorForAllCells(number, selectedColorIndex);
+                    updateColorForAllCells(number, cColor);
                 }
             });
             usedNumbersContainer.appendChild(numberDiv);
@@ -621,10 +774,12 @@
         isDrawingMode = !isDrawingMode;
         const modeLabel = document.getElementById('modeLabel');
         if (isDrawingMode) {
+            console.log(isDrawingMode);
             modeLabel.textContent = 'Режим Рисования';
             createUsedNumbers();
         } else {
             modeLabel.textContent = 'Режим Раскраски';
+            createUsedNumbers();
             updateInputField(); // Обновляем строку ввода при переходе в режим раскраски
         }
         toggleBottomPanel(isDrawingMode);
