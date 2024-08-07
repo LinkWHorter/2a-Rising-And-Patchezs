@@ -292,6 +292,7 @@
     <div class="hidden" id="bottomPanel">
         <div class="used-colours">Использованные цвета: </div>
         <div class="used-numbers" id="usedNumbers">
+            <div class="used-background">B</div>
             <!-- Числа будут добавлены здесь -->
         </div>
         <div class="colours-tagging">(нажмите выбранным цветом, чтобы залить)</div>
@@ -389,6 +390,7 @@
         }
     });
 
+    let hasEmptyCells = false;
     // Функция для обновления всех ячеек с определенным цветом
     function updateColorForAllCells(oldColorNumber, newColorIndex) {
         drawingData.forEach((row, rowIndex) => {
@@ -715,6 +717,7 @@
         const usedNumbersContainer = document.getElementById('usedNumbers');
         usedNumbersContainer.innerHTML = ''; // Очистка текущих чисел
         const uniqueNumbers = new Set();
+
         drawingData.forEach(row => {
             row.forEach(cell => {
                 const cellString = String(cell); // Преобразование в строку
@@ -724,6 +727,9 @@
                     } else if (!cellString.startsWith('F')) {
                         uniqueNumbers.add(cellString);
                     }
+                } else if (cellString == '_') {
+                    hasEmptyCells = true;
+                    uniqueNumbers.add('B');
                 }
             });
         });
@@ -732,10 +738,11 @@
         const sortedNumbers = Array.from(uniqueNumbers).sort((a, b) => a - b);
         sortedNumbers.forEach(number => {
             const numberDiv = document.createElement('div');
+            const cells = document.querySelectorAll('.cell');
             numberDiv.className = 'used-number';
             numberDiv.textContent = number;
             // Найти ячейку .cell с контентом, равным color
-            const matchingCell = Array.from(document.querySelectorAll('.cell')).find(cell => numberDiv.textContent.trim() === cell.textContent.trim());
+            const matchingCell = Array.from(cells).find(cell => numberDiv.textContent.trim() === cell.textContent.trim());
 
             if (matchingCell) {
                 numberDiv.style.backgroundColor = matchingCell.style.backgroundColor;
@@ -748,15 +755,53 @@
                     numberDiv.style.backgroundColor = colors[number - 1];
                 }
             }
+
+            // Функция для заполнения пустых ячеек выбранным цветом
+
             numberDiv.dataset.number = number; // Добавляем data-атрибут для хранения номера цвета
+
             numberDiv.addEventListener('click', () => {
                 // Обработка клика на .used-number
                 if (selectedColorIndex) {
                     updateColorForAllCells(number, cColor);
                 }
             });
+
             usedNumbersContainer.appendChild(numberDiv);
+
+            // Добавляем панель для пустых ячеек, если они есть
+            if (hasEmptyCells) {
+                numberDiv.dataset.number = '_';
+
+                numberDiv.addEventListener('click', () => {
+                    // Заполняем все пустые ячейки выбранным цветом
+                    fillEmptyCellsWithColor(cColor);
+                });
+
+                usedNumbersContainer.appendChild(numberDiv);
+            }
         });
+   
+        // Функция для заполнения пустых ячеек выбранным цветом
+        function fillEmptyCellsWithColor(cColor) {
+            drawingData.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    const cellString = String(cell);
+                    if (cellString === '_') {
+
+                        const cellDiv = document.querySelector(`[data-row="${rowIndex}"][data-col="${colIndex}"]`);
+                        cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
+                        cellDiv.style.color = colorDisplay.style.backgroundColor;
+                        cellDiv.textContent = cColor;
+
+                        // Обновляем drawingData
+                        drawingData[rowIndex][colIndex] = cColor;
+                    }
+                });
+            });
+            createUsedNumbers();
+            updateInputField();
+        }
     }
 
     function toggleBottomPanel(isDrawingMode) {
@@ -826,7 +871,7 @@
         let inputString = `{${drawingData[0]?.length || 0},${drawingData.length};`;
         drawingData.forEach(row => {
             row.forEach(cell => {
-                if (cell === '_') {
+                if (cell === '_' && hasEmptyCells == false) {
                     inputString += '_,';
                 } else {
                     inputString += `${cell},`;
