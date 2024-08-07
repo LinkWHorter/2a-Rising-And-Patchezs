@@ -721,8 +721,7 @@
         drawingData.forEach(row => {
             row.forEach(cell => {
                 const cellString = String(cell); // Преобразование в строку
-                if (cellString !=== '_') {
-                    hasEmptyCells = false;
+                if (cellString !== '_') {
                     if (cellString.startsWith('F')) {
                         uniqueNumbers.add(cellString.substring(1));
                     } else if (!cellString.startsWith('F')) {
