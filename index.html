@@ -722,14 +722,15 @@
             row.forEach(cell => {
                 const cellString = String(cell); // Преобразование в строку
                 if (cellString !== '_') {
+                    hasEmptyCells = false;
                     if (cellString.startsWith('F')) {
                         uniqueNumbers.add(cellString.substring(1));
                     } else if (!cellString.startsWith('F')) {
                         uniqueNumbers.add(cellString);
                     }
                 } else if (cellString == '_') {
-                    hasEmptyCells = true;
                     uniqueNumbers.add('B');
+                    hasEmptyCells = true;
                 }
             });
         });
@@ -763,23 +764,19 @@
             numberDiv.addEventListener('click', () => {
                 // Обработка клика на .used-number
                 if (selectedColorIndex) {
-                    updateColorForAllCells(number, cColor);
-                }
-            });
-
-            usedNumbersContainer.appendChild(numberDiv);
-
-            // Добавляем панель для пустых ячеек, если они есть
-            if (hasEmptyCells) {
-                numberDiv.dataset.number = '_';
-
-                numberDiv.addEventListener('click', () => {
-                    // Заполняем все пустые ячейки выбранным цветом
-                    fillEmptyCellsWithColor(cColor);
+                        updateColorForAllCells(number, cColor);
+                    }
                 });
 
-                usedNumbersContainer.appendChild(numberDiv);
-            }
+        // Добавляем панель для пустых ячеек, если они есть
+        if (hasEmptyCells && number == 'B') {
+            numberDiv.addEventListener('click', () => {
+                // Заполняем все пустые ячейки выбранным цветом
+                fillEmptyCellsWithColor(cColor);
+            });
+        }
+
+            usedNumbersContainer.appendChild(numberDiv);
         });
    
         // Функция для заполнения пустых ячеек выбранным цветом
@@ -788,7 +785,7 @@
                 row.forEach((cell, colIndex) => {
                     const cellString = String(cell);
                     if (cellString === '_') {
-
+                        console.log(cellString);
                         const cellDiv = document.querySelector(`[data-row="${rowIndex}"][data-col="${colIndex}"]`);
                         cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
                         cellDiv.style.color = colorDisplay.style.backgroundColor;
