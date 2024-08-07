@@ -356,7 +356,7 @@
             shadeDiv.className = 'shade';
             shadeDiv.style.backgroundColor = shade;
             index = index + 1;
-            const shadeKey = colorIndex + '་' + index; // Создаем ключ для shade
+            const shadeKey = colorIndex + '⥍' + index; // Создаем ключ для shade
             shadeDiv.dataset.shadeKey = shadeKey; // Устанавливаем ключ в dataset
             shadeDiv.textContent = shadeKey;
             shadeDiv.addEventListener('click', () => {
@@ -589,29 +589,29 @@
                         if (String(cell).startsWith('F')) {
                             // Обработка ячейки с состоянием закрашенности
                             const number = parseInt(cell.substring(1), 10);
-                            if (!String(cell).includes('་')) {
+                            if (!String(cell).includes('⥍')) {
                                 cellDiv.style.backgroundColor = colors[number - 1];
                                 cellDiv.style.fontSize = '10px';
                                 cellDiv.style.color = colors[number - 1];
                             }
-                            else if (String(cell).includes('་')) {
+                            else if (String(cell).includes('⥍')) {
                                 const cleanedCell = cell.startsWith('F') ? cell.slice(1) : cell;
                                 cellDiv.style.fontSize = '7px';
-                                const [shadeIndex, shadeNumber] = cleanedCell.split('་').map(Number);
+                                const [shadeIndex, shadeNumber] = cleanedCell.split('⥍').map(Number);
                                 // Обработка ячейки с состоянием закрашенности
                                 cellDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
                                 cellDiv.style.color = shades[shadeIndex]?.[shadeNumber]; // Цвет текста для закрашенной ячейки
                             }
                             cellDiv.textContent = number;
                         } else {
-                            if (String(cell).includes('་')) {
-                                const [shadeIndex, shadeNumber] = cell.split('་').map(Number);
+                            if (String(cell).includes('⥍')) {
+                                const [shadeIndex, shadeNumber] = cell.split('⥍').map(Number);
                                 cellDiv.style.fontSize = '7px';
                                 // Обработка ячейки с состоянием закрашенности
                                 cellDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
                                 cellDiv.style.color = shades[shadeIndex]?.[shadeNumber]; // Цвет текста для закрашенной ячейки
                             }
-                            else if (!String(cell).includes('་')) {
+                            else if (!String(cell).includes('⥍')) {
                                 cellDiv.style.backgroundColor = colors[cell - 1];
                                 cellDiv.style.fontSize = '10px';
                                 cellDiv.style.color = colors[cell - 1]; // Цвет текста как цвет фона в режиме рисования
@@ -622,15 +622,15 @@
                         if (String(cell).startsWith('F')) {
                             // Обработка ячейки с состоянием закрашенности
                             const number = parseInt(cell.substring(1), 10);
-                            if (!String(cell).includes('་')) {
+                            if (!String(cell).includes('⥍')) {
                                 cellDiv.style.backgroundColor = colors[number - 1];
                                 cellDiv.style.fontSize = '12px';
                                 cellDiv.style.color = colors[number - 1];
                             }
-                            else if (String(cell).includes('་')) {
+                            else if (String(cell).includes('⥍')) {
                                 const cleanedCell = cell.startsWith('F') ? cell.slice(1) : cell;
                                 cellDiv.style.fontSize = '7px';
-                                const [shadeIndex, shadeNumber] = cleanedCell.split('་').map(Number);
+                                const [shadeIndex, shadeNumber] = cleanedCell.split('⥍').map(Number);
                                 // Обработка ячейки с состоянием закрашенности
                                 cellDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
                                 cellDiv.style.color = shades[shadeIndex]?.[shadeNumber]; // Цвет текста для закрашенной ячейки
@@ -638,10 +638,10 @@
                             cellDiv.textContent = number;
                         } else if (!String(cell).startsWith('F')) {
                             cellDiv.style.backgroundColor = 'transparent';
-                            if (!String(cell).includes('་')) {
+                            if (!String(cell).includes('⥍')) {
                                 cellDiv.style.fontSize = '12px';
                             }
-                            else if (String(cell).includes('་')) {
+                            else if (String(cell).includes('⥍')) {
                                 cellDiv.style.fontSize = '10px';
                             }
                             cellDiv.style.color = '#000'; // Чёрный цвет текста в режиме раскраски
@@ -743,8 +743,8 @@
                 numberDiv.style.backgroundColor = matchingCell.style.backgroundColor;
             } else {
                 // Определяем, является ли номер цветом или оттенком
-                if (number.toString().includes('་')) {
-                    const [shadeIndex, shadeNumber] = number.split('་').map(Number);
+                if (number.toString().includes('⥍')) {
+                    const [shadeIndex, shadeNumber] = number.split('⥍').map(Number);
                     numberDiv.style.backgroundColor = shades[shadeIndex]?.[shadeNumber];
                 } else {
                     numberDiv.style.backgroundColor = colors[number - 1];
