@@ -432,7 +432,8 @@
 
     drawing.style.border = '0';
     drawing.style.borderRadius = '0';
-    
+    drawing.style.transform = `scale(1)`;
+
     // Используем html2canvas для создания изображения
     html2canvas(drawing, {
         scale: 15, // Увеличиваем разрешение в 15 раз
@@ -533,9 +534,9 @@
             if (isDrawingMode) {
                 cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
                 cellDiv.style.color = colorDisplay.style.backgroundColor;
-                cellDiv.textContent = selectedColorIndex;
-                cellDiv.dataset.cellIndex = selectedColorIndex;
-                drawingData[rowIndex][colIndex] = selectedColorIndex;
+                cellDiv.textContent = cColor;
+                cellDiv.dataset.cellIndex = cColor;
+                drawingData[rowIndex][colIndex] = cColor;
                 createUsedNumbers();
             } /*else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
                 const fillValue = 'F' + selectedColorIndex;
