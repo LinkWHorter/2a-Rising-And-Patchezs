@@ -533,12 +533,12 @@
             if (isDrawingMode) {
                 cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
                 cellDiv.style.color = colorDisplay.style.backgroundColor;
-                cellDiv.textContent = cColor;
-                cellDiv.dataset.cellIndex = cColor;
-                drawingData[rowIndex][colIndex] = cColor;
+                cellDiv.textContent = selectedColorIndex;
+                cellDiv.dataset.cellIndex = selectedColorIndex;
+                drawingData[rowIndex][colIndex] = selectedColorIndex;
                 createUsedNumbers();
-            } else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
-                const fillValue = 'F' + cColor;
+            } /*else if (cellDiv.dataset.cellIndex == selectedColorIndex) {
+                const fillValue = 'F' + selectedColorIndex;
                 cellDiv.style.backgroundColor = colorDisplay.style.backgroundColor;
                 cellDiv.style.color = colorDisplay.style.backgroundColor;
                 cellDiv.textContent = fillValue;
@@ -546,7 +546,7 @@
                 drawingData[rowIndex][colIndex] = fillValue;
                 updateInputField(); // Обновляем строку ввода после закраски
                 createUsedNumbers();
-            }
+            }*/
         }
     }
 
