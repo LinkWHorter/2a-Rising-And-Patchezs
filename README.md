@@ -20,6 +20,6 @@ To open the tint palette, hold down the desired color with your finger and selec
   
 <p align="center"><img height="217px" alt="CP-Example 3" src="https://github.com/user-attachments/assets/1e66eeef-88e3-493c-b0f7-f8e085f2619c" /></p>  
   
-<p align="center"><i>Link to the website itself <a src="https://linkwhorter.github.io/2a-Rising-And-Patchezs/">here</a>.</i></p>  
+<p align="center"><i>Link to the website itself <a href="https://linkwhorter.github.io/2a-Rising-And-Patchezs/">here</a>.</i></p>  
 
 🍍Good luck to all Pokémons with your coloring(s)🍎
